@@ -1,6 +1,6 @@
-### Bulk download Stripe invoices and payment receipts for free
+## Bulk download Stripe invoices and payment receipts for free
 
-#### Why I made this:
+### Why I made this:
 
 I own a SaaS business and it's profitable (thank God). [Stripe](https://stripe.com/) is the primary payment processor. As a good boi, I pay my taxes, and I need documents to back it up. According to my accountant, I need the invoice and payment receipt issued to EACH customer. I have way too much customers (thank God again) and can't possibly download each and every customer's documents on the Stripe dashboard.
 
@@ -17,12 +17,12 @@ Obviously there is some existing solution out there BUT:
 
 Enough yapping, let's get into the meat.
 
-#### Prerequisites:
+### Prerequisites:
 
 1. Know how to edit the code with an IDE and run commands in a terminal
 2. Installed Node.js
 
-#### How to use:
+### How to use:
 
 1. Retrieve secret key in API keys of your Stripe dashboard
 2. Create `.env` file in the root folder and add `STRIPE_SECRET=paste_your_secret_key_here` (see `./.env.example`)
