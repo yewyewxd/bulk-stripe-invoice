@@ -9,8 +9,8 @@ const STRIPE_SECRET = process.env.STRIPE_SECRET
 const OUT_DIR = './stripe_invoices'
 
 // Change these to the month/time-range you want:
-const FROM = Math.floor(new Date('2025-10-01').getTime() / 1000) // UNIX timestamp (seconds)
-const TO = Math.floor(new Date('2025-10-31').getTime() / 1000)
+const FROM = Math.floor(new Date('2025-11-01').getTime() / 1000) // UNIX timestamp (seconds)
+const TO = Math.floor(new Date('2025-11-30').getTime() / 1000)
 // ------------
 
 const stripe = new Stripe(STRIPE_SECRET, { apiVersion: '2023-10-16' })
@@ -26,7 +26,8 @@ async function downloadAll() {
 
   const invoices = await stripe.invoices.list(listParams)
 
-  for await (const inv of invoices.autoPagingIterable()) {
+  for (const inv of invoices.data) {
+    if (inv.total == 0) continue // skip free trial invoice
     if (!inv.invoice_pdf) {
       console.log(`⚠️ Invoice ${inv.id} has no PDF URL, skipping.`)
       continue
