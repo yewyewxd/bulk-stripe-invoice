@@ -16,8 +16,8 @@ const RECEIPTS_ZIP = path.join(OUT_DIR, 'receipts.zip')
 const MAX_CONCURRENT_DOWNLOADS = 20
 
 // Change these to the month/time-range you want:
-const FROM = Math.floor(new Date('2025-11-01T00:00:00').getTime() / 1000)
-const TO = Math.floor(new Date('2025-11-30T23:59:59').getTime() / 1000)
+const FROM = Math.floor(new Date('2026-03-01T00:00:00').getTime() / 1000)
+const TO = Math.floor(new Date('2026-03-31T23:59:59.999').getTime() / 1000)
 // ------------
 
 const stripe = new Stripe(STRIPE_SECRET, { apiVersion: '2023-10-16' })
@@ -64,7 +64,7 @@ async function downloadInvoices() {
         console.log(`📄 Invoice added to ZIP: ${filename}`)
         total += inv.total
         count++
-      })
+      }),
     )
 
   await Promise.all(tasks)
@@ -105,7 +105,7 @@ async function downloadReceipts() {
         console.log(`🧾 Receipt added to ZIP: ${filename}`)
         total += ch.amount
         count++
-      })
+      }),
     )
 
   await Promise.all(tasks)
