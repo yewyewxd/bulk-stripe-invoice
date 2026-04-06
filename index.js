@@ -26,6 +26,9 @@ const CONFIG = {
     enable: true && { download_pdf: true },
   },
 }
+console.log(
+  `⏳ Starting job for "${TARGET_MONTH.format('MMMM YYYY (MM/YYYY)')}" ...`,
+)
 
 // Start to end of month (don't touch this)
 const FROM = Math.floor(TARGET_MONTH.startOf('month').valueOf() / 1000)
