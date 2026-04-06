@@ -2,6 +2,7 @@ require('dotenv').config()
 const fs = require('fs')
 const path = require('path')
 const axios = require('axios')
+const dayjs = require('dayjs')
 const Stripe = require('stripe')
 const archiver = require('archiver')
 const { default: pLimit } = require('p-limit')
@@ -15,9 +16,20 @@ const RECEIPTS_ZIP = path.join(OUT_DIR, 'receipts.zip')
 // Concurrency limit for simultaneous downloads
 const MAX_CONCURRENT_DOWNLOADS = 20
 
-// Change these to the month/time-range you want:
-const FROM = Math.floor(new Date('2026-03-01T00:00:00').getTime() / 1000)
-const TO = Math.floor(new Date('2026-03-31T23:59:59.999').getTime() / 1000)
+// Month and download variables 🔧
+const TARGET_MONTH = dayjs().set('month', 2) // 0-indexed, 0 = January
+const CONFIG = {
+  invoice: {
+    enable: true && { download_pdf: true },
+  },
+  receipt: {
+    enable: true && { download_pdf: true },
+  },
+}
+
+// Start to end of month (don't touch this)
+const FROM = Math.floor(TARGET_MONTH.startOf('month').valueOf() / 1000)
+const TO = Math.floor(TARGET_MONTH.endOf('month').valueOf() / 1000)
 // ------------
 
 const stripe = new Stripe(STRIPE_SECRET, { apiVersion: '2023-10-16' })
@@ -60,8 +72,10 @@ async function downloadInvoices() {
           .toISOString()
           .slice(0, 10)
         const filename = `${createdDate}_invoice_${inv.id}.pdf`
-        await downloadFileToZip(inv.invoice_pdf, filename, archive)
-        console.log(`📄 Invoice added to ZIP: ${filename}`)
+        if (CONFIG.invoice.enable.download_pdf) {
+          await downloadFileToZip(inv.invoice_pdf, filename, archive)
+          console.log(`📄 Invoice added to ZIP: ${filename}`)
+        }
         total += inv.total
         count++
       }),
@@ -70,7 +84,11 @@ async function downloadInvoices() {
   await Promise.all(tasks)
 
   await archive.finalize()
-  console.log(`✅ Finished ${count} invoices into ${INVOICES_ZIP}`)
+  console.log(
+    CONFIG.invoice.enable.download_pdf
+      ? `✅ Finished ${count} invoices into ${INVOICES_ZIP}`
+      : `⚠️ PDF download disabled for ${INVOICES_ZIP}`,
+  )
   console.log(`Total earned: $${(total / 100).toFixed(2)}`)
 }
 
@@ -101,8 +119,10 @@ async function downloadReceipts() {
           .slice(0, 10)
         const filename = `${createdDate}_receipt_${ch.id}.pdf`
         const pdfUrl = ch.receipt_url.replace(/(\?s=.*)$/i, '/pdf$1')
-        await downloadFileToZip(pdfUrl, filename, archive)
-        console.log(`🧾 Receipt added to ZIP: ${filename}`)
+        if (CONFIG.receipt.enable.download_pdf) {
+          await downloadFileToZip(pdfUrl, filename, archive)
+          console.log(`🧾 Receipt added to ZIP: ${filename}`)
+        }
         total += ch.amount
         count++
       }),
@@ -111,14 +131,18 @@ async function downloadReceipts() {
   await Promise.all(tasks)
 
   await archive.finalize()
-  console.log(`✅ Finished ${count} receipts into ${RECEIPTS_ZIP}`)
+  console.log(
+    CONFIG.receipt.enable.download_pdf
+      ? `✅ Finished ${count} receipts into ${RECEIPTS_ZIP}`
+      : `⚠️ PDF download disabled for ${RECEIPTS_ZIP}`,
+  )
   console.log(`Total earned: $${(total / 100).toFixed(2)}`)
 }
 
 async function downloadAll() {
-  await downloadInvoices()
-  await downloadReceipts()
-  console.log('\n🎉 DONE — Invoices & Receipts zipped!')
+  if (CONFIG.invoice.enable) await downloadInvoices()
+  if (CONFIG.receipt.enable) await downloadReceipts()
+  console.log('\n🎉 JOB DONE — Invoices & Receipts!')
 }
 
 downloadAll().catch((err) => {
